@@ -1,0 +1,2465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Self-Bot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #36393f;
+            --bg-secondary: #2f3136;
+            --bg-tertiary: #202225;
+            --text-normal: #dcddde;
+            --text-muted: #72767d;
+            --accent: #5865f2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-normal);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 240px;
+            background-color: var(--bg-secondary);
+            padding: 15px 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .logo {
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--bg-tertiary);
+            margin-bottom: 15px;
+        }
+
+        .nav-item {
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item:hover {
+            background-color: var(--bg-tertiary);
+        }
+
+        .nav-item.active {
+            background-color: var(--accent);
+        }
+
+        .nav-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .card {
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-header i {
+            margin-right: 10px;
+            color: var(--accent);
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 11px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn i {
+            margin-right: 5px;
+        }
+
+        .btn:hover {
+            background-color: #4752c4;
+        }
+
+        .btn-danger {
+            background-color: #ed4245;
+        }
+
+        .btn-danger:hover {
+            background-color: #c03537;
+        }
+
+        .btn-success {
+            background-color: #3ba55d;
+        }
+
+        .btn-success:hover {
+            background-color: #2d8c4a;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: white;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid #202225;
+            border-radius: 4px;
+            color: var(--text-normal);
+        }
+
+        .friend-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .friend-card {
+            background-color: var(--bg-tertiary);
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .friend-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #5865f2;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .friend-info {
+            flex: 1;
+        }
+
+        .friend-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .friend-id {
+            color: var(--text-muted);
+            font-size: 0.55rem;
+        }
+
+        .friend-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 4px;
+            color: white;
+            background-color: #2d7d46;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.error {
+            background-color: #ed4245;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background-color: #3ba55d;
+        }
+
+        .status-offline {
+            background-color: #ed4245;
+        }
+
+
+        .status-option {
+            padding: 8px 15px;
+            border-radius: 4px;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .status-option:hover {
+            background: #3f4248;
+        }
+
+        .status-option.active {
+            background: var(--accent);
+        }
+
+        .section-container {
+            display: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        .loader {
+            padding: 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+
+        .friend-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .friend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: var(--bg-tertiary);
+            border-radius: 8px;
+        }
+
+        .friend-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .friend-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .friend-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .friend-name {
+            font-weight: 500;
+        }
+
+        .friend-id {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .friend-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+
+
+        .conversation-list {
+            width: 300px;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+            height: 100%;
+        }
+
+
+
+
+
+        .status-option {
+            padding: 8px 12px;
+            background-color: var(--bg-tertiary);
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .status-option:hover {
+            background-color: #3a3e45;
+        }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .form-check-input {
+            margin-right: 10px;
+            margin-top: 0;
+        }
+
+        .friend-request-card {
+            background-color: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .auto-settings {
+            background-color: rgba(88, 101, 242, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">Panel S-B0T</div>
+        <div class="nav-item active" onclick="showSection('dashboard')">
+            <i class="fas fa-home"></i> Главная
+        </div>
+        <div class="nav-item" onclick="showSection('friends')">
+            <i class="fas fa-user-friends"></i> Друзья
+        </div>
+        <div class="nav-item" onclick="showSection('friend-requests')">
+            <i class="fas fa-user-plus"></i> Заявки
+        </div>
+        <div class="nav-item" onclick="showSection('messenger')">
+            <i class="fas fa-comments"></i> Мессенджер
+        </div>
+        <div class="nav-item" onclick="showSection('guilds')">
+            <i class="fas fa-server"></i> Серверы
+        </div>
+        <div class="nav-item" onclick="showSection('settings')">
+            <i class="fas fa-cog"></i> Настройки
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="section-container">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line"></i> Статус бота
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Статус</div>
+                        <div id="bot-status" class="stat-value">
+                            <span class="status-indicator status-offline"></span> Offline
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Сообщений получено</div>
+                        <div id="message-count" class="stat-value">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Друзей</div>
+                        <div id="friend-count" class="stat-value">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Время работы</div>
+                        <div id="uptime" class="stat-value">00:00:00</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button id="start-btn" class="btn btn-success">
+                        <i class="fas fa-play"></i> Запустить бота
+                    </button>
+                    <button id="stop-btn" class="btn btn-danger">
+                        <i class="fas fa-stop"></i> Остановить бота
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-paper-plane"></i> Отправить сообщение
+                </div>
+                <div class="form-group">
+                    <label>ID пользователя:</label>
+                    <input type="text" id="send-user-id" placeholder="Введите ID пользователя">
+                </div>
+                <div class="form-group">
+                    <label>Сообщение:</label>
+                    <textarea id="send-message" rows="3" placeholder="Введите текст сообщения"></textarea>
+                </div>
+                <button id="send-btn" class="btn">
+                    <i class="fas fa-paper-plane"></i> Отправить
+                </button>
+            </div>
+        </div>
+
+        <!-- Friends Section -->
+        <div id="friends-section" class="section-container" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-user-friends"></i> Друзья
+                </div>
+                <div class="card-body">
+
+                    <div id="friends-list" class="friend-list">
+
+                    </div>
+
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-user-friends"></i> Заблокированные пользователи
+                </div>
+            <h5 class="mt-4"></h5>
+                    <div id="blocked-list" class="friend-list">
+
+                    </div>
+                </div>
+        </div>
+
+        <!-- Friend Requests Section -->
+        <div id="friend-requests-section" class="section-container" style="display: none;">
+    <div class="card elegant-card">
+        <div class="card-header elegant-header">
+            <i class="fas fa-user-plus header-icon"></i>
+            <span class="header-title">Управление заявками в друзья</span>
+        </div>
+
+        <div class="card-body elegant-body">
+            <!-- Авто-настройки -->
+            <div class="auto-settings-box">
+                <div class="settings-header">
+                    <i class="fas fa-cog settings-icon"></i>
+                    <h5 class="settings-title">Автоматическая обработка</h5>
+                </div>
+
+                <div class="toggle-group">
+                    <div class="toggle-item">
+                        <div class="form-check form-switch elegant-switch">
+                            <input class="form-check-input" type="checkbox" id="autoAcceptSwitch">
+                            <label class="form-check-label" for="autoAcceptSwitch">
+                                Автоматически принимать все заявки
+                            </label>
+                        </div>
+                        <div class="toggle-hint">
+                            <i class="fas fa-check-circle"></i> Новые заявки будут автоматически добавляться в друзья
+                        </div>
+                    </div>
+
+                    <div class="toggle-item">
+                        <div class="form-check form-switch elegant-switch">
+                            <input class="form-check-input" type="checkbox" id="autoRejectSwitch">
+                            <label class="form-check-label" for="autoRejectSwitch">
+                                Автоматически отклонять все заявки
+                            </label>
+                        </div>
+                        <div class="toggle-hint">
+                            <i class="fas fa-times-circle"></i> Новые заявки будут автоматически отклоняться
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-note">
+                    <i class="fas fa-info-circle note-icon"></i>
+                    <p>Обе опции не могут быть активны одновременно. Приоритет имеет включенная первой.</p>
+                </div>
+            </div>
+
+            <!-- Список заявок -->
+            <div class="requests-section">
+                <div class="section-header">
+                    <h5 class="section-title">
+                        <i class="fas fa-inbox"></i> Входящие заявки
+                        <span class="badge badge-pill badge-notification" id="requests-count">0</span>
+                    </h5>
+                    <button class="btn btn-refresh" id="refresh-requests-btn">
+                        <i class="fas fa-sync"></i> Обновить
+                    </button>
+                </div>
+
+                <div id="friend-requests-container" class="requests-container">
+                    <div class="loader-container">
+                        <div class="spinner-border text-primary loader-spinner" role="status">
+                            <span class="visually-hidden"></span>
+                        </div>
+                        <p class="loader-text">Загрузка заявок...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+        <style>
+/* Общие стили карточки */
+.elegant-card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    border: none;
+    background: linear-gradient(145deg, #2f3136, #2f3136);
+}
+
+.header-icon {
+    margin-right: 12px;
+    font-size: 1.4rem;
+}
+
+.elegant-body {
+    padding: 25px;
+    background: #2f3136;
+}
+
+/* Стили для блока настроек */
+.auto-settings-box {
+    background: rgba(30, 32, 36, 0.7);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    border: 1px solid #40444b;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #40444b;
+}
+
+.settings-icon {
+    color: #5865F2;
+    font-size: 1.3rem;
+    margin-right: 12px;
+}
+
+
+
+.toggle-group {
+    margin-bottom: 15px;
+}
+
+.toggle-item {
+    background: rgba(50, 53, 59, 0.5);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+    border: 1px solid #3a3e45;
+}
+
+.toggle-item:hover {
+    background: rgba(56, 58, 64, 0.7);
+    transform: translateY(-2px);
+    border-color: #5865F2;
+}
+
+.elegant-switch .form-check-input {
+    width: 48px;
+    height: 24px;
+    cursor: pointer;
+    background-color: #4f545c;
+    border: none;
+}
+
+.elegant-switch .form-check-input:checked {
+    background-color: #5865F2;
+}
+
+.elegant-switch .form-check-label {
+    color: #f6f6f7;
+    font-size: 1rem;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.elegant-switch .form-check-label:hover {
+    color: #dcddde;
+}
+
+.toggle-hint {
+    color: #b9bbbe;
+    font-size: 0.9rem;
+    padding-left: 38px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.toggle-hint i {
+    margin-right: 8px;
+    font-size: 0.95rem;
+}
+
+.info-note {
+    background: rgba(88, 101, 242, 0.1);
+    border-left: 3px solid #5865F2;
+    padding: 12px 15px;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.note-icon {
+    color: #5865F2;
+    margin-right: 10px;
+    font-size: 1.1rem;
+    float: left;
+}
+
+
+
+/* Стили для списка заявок */
+.requests-section {
+    background: rgba(40, 42, 46, 0.7);
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid #40444b;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    color: #f6f6f7;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i {
+    margin-right: 10px;
+    color: #5865F2;
+}
+
+.badge-notification {
+    background: #5865F2;
+    margin-left: 10px;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.btn-refresh {
+    background: rgba(88, 101, 242, 0.2);
+    color: #dcddde;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.btn-refresh:hover {
+    background: rgba(88, 101, 242, 0.35);
+    transform: translateY(-2px);
+}
+
+.btn-refresh i {
+    margin-right: 6px;
+}
+
+.requests-container {
+    min-height: 300px;
+    position: relative;
+}
+
+.loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+}
+
+.loader-spinner {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 15px;
+    color: #5865F2;
+}
+
+.loader-text {
+    color: #b9bbbe;
+    font-size: 1rem;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+    animation: fadeIn 0.4s ease forwards;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            /* Messenger Styles */
+.messenger-container {
+    display: flex;
+    height: calc(100vh - 60px);
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.conversation-list {
+    width: 300px;
+    background: var(--bg-tertiary);
+    /* Убрана черная правая полоска */
+    display: flex;
+    flex-direction: column;
+}
+
+.conversation-header {
+    padding: 15px;
+    /* Убрана черная нижняя полоска */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.conversation-items {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.conversation-item {
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+/* Черный фон при наведении */
+.conversation-item:hover {
+    background: #222428 !important;
+}
+
+.conversation-item.active {
+    background: var(--bg-secondary);
+}
+
+.conversation-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 12px;
+}
+
+.conversation-info {
+    flex: 1;
+}
+
+.conversation-name {
+    font-weight: 500;
+}
+
+.conversation-preview {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.conversation-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary);
+}
+
+.conversation-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-secondary);
+        }
+
+.message-history {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.message {
+    background: var(--bg-tertiary);
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    max-width: 70%;
+}
+
+.message.self {
+    background: var(--accent);
+    align-self: flex-end;
+}
+
+.message-author {
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.message-content {
+    line-height: 1.4;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: 5px;
+}
+
+.no-conversation {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 40px;
+}
+
+/* Guilds Styles */
+.guilds-container {
+    padding: 20px;
+}
+
+.guild-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.guild-card {
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.guild-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-right: 15px;
+}
+
+.guild-info {
+    flex: 1;
+}
+
+.guild-name {
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.guild-id {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.guild-actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* Status selector */
+.status-selector {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+        </style>
+
+
+        <!-- Messenger Section -->
+        <div id="messenger-section" class="section-container" style="display: none;">
+            <div class="messenger-container">
+                <div class="conversation-list">
+                    <div class="conversation-header">
+                        <h3>Чаты</h3>
+                        <button class="btn" onclick="startNewChat()" style="padding: 8px 12px;">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <div id="new-chat-section" style="display: none; padding: 15px; background: var(--bg-tertiary); border-radius: 8px; margin: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                        <div class="form-group">
+                            <label>Выберите друга:</label>
+                            <select id="new-chat-select" class="form-control">
+                                <option value=""></option>
+                            </select>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                            <button class="btn" onclick="createNewChat()" style="width: auto;">
+                                <i class="fas fa-comment"></i> Начать чат
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="conversation-items" id="conversation-items">
+                        <div class="loader">Загрузка чатов...</div>
+                    </div>
+                </div>
+
+                <div class="conversation-view">
+                    <div id="active-conversation" style="display: flex; flex-direction: column; height: 100%;">
+                        <div class="conversation-header">
+                            <div style="display: flex; align-items: center;">
+                                <div class="conversation-avatar" id="conversation-avatar">U</div>
+                                <div>
+                                    <div id="conversation-title" style="font-weight: 600;">Беседа</div>
+                                    <div id="conversation-status" style="font-size: 0.8rem; color: var(--text-muted);">Чат</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="no-conversation" class="no-conversation">
+                            <div style="background: var(--accent); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                                <i class="fas fa-comments fa-2x" style="color: white;"></i>
+                            </div>
+                            <h3>Выберите чат или начните новый</h3>
+                            <p>Отправляйте сообщения, общайтесь с друзьями</p>
+                        </div>
+                        <div class="message-history" id="message-history"></div>
+                        <div class="message-input-container">
+                            <div style="display: flex; align-items: center; width: 100%; background: var(--bg-tertiary); border-radius: 24px; padding: 8px 15px;">
+                                <textarea
+                                    id="message-input"
+                                    placeholder="Напишите сообщение..."
+                                    onkeydown="if(event.key === 'Enter' && !event.shiftKey) { sendChatMessage(); event.preventDefault(); }"
+                                    style="
+                                        flex: 1;
+                                        background: transparent;
+                                        border: none;
+                                        color: var(--text-normal);
+                                        font-size: 1rem;
+                                        resize: none;
+                                        max-height: 120px;
+                                        padding: 8px 12px;
+                                        outline: none;
+                                        box-shadow: none;
+                                    "
+                                ></textarea>
+                                <button id="send-message-btn" class="btn" style="
+                                    width: 36px;
+                                    height: 36px;
+                                    border-radius: 50%;
+                                    padding: 0;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    background: var(--accent);
+                                    border: none;
+                                ">
+                                    <i class="fas fa-paper-plane" style="font-size: 16px;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guilds Section -->
+        <div id="guilds-section" class="section-container" style="display: none;">
+            <div class="guilds-container">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-server"></i> Мои серверы
+                    </div>
+                    <div class="guild-list" id="guilds-container">
+                        <div class="loader">Загрузка серверов...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings-section" class="section-container" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-cog"></i> Настройки аккаунта
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Статус:</label>
+                        <div class="status-selector">
+                            <div class="status-option" data-status="online" onclick="setStatus('online')">Online</div>
+                            <div class="status-option" data-status="idle" onclick="setStatus('idle')">Idle</div>
+                            <div class="status-option" data-status="dnd" onclick="setStatus('dnd')">Do Not Disturb</div>
+                            <div class="status-option" data-status="invisible" onclick="setStatus('invisible')">Invisible</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Отправить сообщение всем друзьям:</label>
+                        <textarea id="broadcast-message" rows="3" placeholder="Введите сообщение для всех друзей"></textarea>
+                        <button id="broadcast-btn" class="btn" style="margin-top: 10px;">
+                            <i class="fas fa-bullhorn"></i> Отправить всем
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Добавить друга:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="friend-username" placeholder="Имя пользователя">
+                            <input type="text" id="friend-discriminator" placeholder="#0000" style="width: 80px;">
+                            <button id="add-friend-btn" class="btn">
+                                <i class="fas fa-user-plus"></i> Добавить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Настройки автоответчика -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <i class="fas fa-robot"></i> Настройки автоответчика
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="auto-responder-enabled"> Включить автоответчик
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Тип автоответчика:</label>
+                        <select id="auto-responder-type" class="form-control">
+                            <option value="simple">Простой (заготовленное сообщение)</option>
+                            <option value="ai">ИИ (OpenRouter)</option>
+                        </select>
+                    </div>
+
+                    <div id="simple-auto-responder-settings">
+                        <div class="form-group">
+                            <label>Сообщение:</label>
+                            <textarea id="simple-message" rows="3" class="form-control" placeholder="Введите текст автоответа"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Задержка ответа (секунды):</label>
+                            <input type="number" id="simple-delay" min="0" value="60" class="form-control">
+                            <small class="form-text text-muted">0 = ответить сразу, >0 = ждать указанное время без активности</small>
+                        </div>
+                    </div>
+
+                    <div id="ai-auto-responder-settings" style="display: none;">
+                        <div class="form-group">
+                            <label>API ключ OpenRouter:</label>
+                            <input type="password" id="ai-api-key" class="form-control" placeholder="Введите ваш API ключ">
+                            <small class="form-text text-muted">
+                                Получите ключ на <a href="https://openrouter.ai" target="_blank">openrouter.ai</a>
+                            </small>
+                        </div>
+                        <div class="form-group">
+                            <label>Системный промпт:</label>
+                            <textarea id="ai-system-prompt" rows="5" class="form-control" placeholder="Инструкции для ИИ"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Модель:</label>
+                            <select id="ai-model" class="form-control">
+                                <option value="@preset/deepseek">DeepSeek-R1 0528 (Бесплатно)</option>
+                                <option value="mistralai/mistral-7b-instruct">Mistral 7B</option>
+                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                <option value="openchat/openchat-7b">OpenChat 7B</option>
+                            </select>
+                            <small class="form-text text-muted">
+                                Для DeepSeek-R1 используйте английские промпты для лучших результатов
+                            </small>
+                        </div>
+                    </div>
+
+                    <button id="save-auto-responder-btn" class="btn">
+                        <i class="fas fa-save"></i> Сохранить настройки
+                    </button>
+                </div>
+            </div>
+
+            <!-- Управление токеном -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header">
+                    <i class="fas fa-key"></i> Управление токеном
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Токен аккаунта:</label>
+                        <input type="password" id="token-input" class="form-control" placeholder="Введите токен Discord">
+                        <button id="save-token-btn" class="btn" style="margin-top: 10px;">
+                            <i class="fas fa-save"></i> Сохранить токен
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <label>Загрузить токен из файла:</label>
+                        <input type="file" id="token-file" accept=".token" class="form-control">
+                        <button id="upload-token-btn" class="btn" style="margin-top: 10px;">
+                            <i class="fas fa-upload"></i> Загрузить файл
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <label>Текущий токен:</label>
+                        <div id="token-status" style="margin: 5px 0; padding: 10px; background: var(--bg-tertiary); border-radius: 8px;">
+                            <i class="fas fa-circle" style="color: #f04747;"></i> Не задан
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+         let botStatus = false;
+        let botUptime = 0;
+        const startTime = new Date();
+        let activeConversation = null;
+        let lastMessageId = 0;
+        let messageRefreshInterval = null;
+        let currentRecipient = null;
+        let refreshInterval = null;
+        let lastMessageTimestamp = 0;
+        // Update bot status
+        function updateBotStatus() {
+            fetch('/')
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const botInfo = doc.querySelector('.bot-info');
+
+                    if (botInfo) {
+                        botStatus = botInfo.dataset.status === 'online';
+                        document.getElementById('bot-status').innerHTML = `
+                            <span class="status-indicator ${botStatus ? 'status-online' : 'status-offline'}"></span>
+                            ${botStatus ? 'Online' : 'Offline'}
+                        `;
+
+                        if (botStatus) {
+                            document.getElementById('message-count').textContent =
+                                botInfo.dataset.messageCount || '0';
+                            document.getElementById('friend-count').textContent =
+                                botInfo.dataset.friendCount || '0';
+
+                            // Update uptime
+                            const now = new Date();
+                            const diff = Math.floor((now - startTime) / 1000);
+                            const hours = Math.floor(diff / 3600).toString().padStart(2, '0');
+                            const minutes = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+                            const seconds = (diff % 60).toString().padStart(2, '0');
+                            document.getElementById('uptime').textContent = `${hours}:${minutes}:${seconds}`;
+                        }
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        // Глобальные функции для консоли браузера
+window.executeCommand = function(command) {
+    const args = command.split(' ');
+    if (args[0] === '!token' && args[1]) {
+        setToken(args[1]);
+    } else if (args[0] === '!file') {
+        createTokenFile();
+    }
+};
+
+function setToken(token) {
+    fetch('/save_token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.message);
+        if (data.success && botActive) {
+            showToast('Токен успешно применен!');
+        }
+    });
+}
+
+function createTokenFile() {
+    const fileContent = `fetch("https://discord.com/api/v9/science", {
+  "headers": {
+    "accept": "*/*",
+    "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+    "authorization": "${DISCORD_TOKEN || 'YOUR_TOKEN_HERE'}",
+    // ... остальные заголовки
+  }
+}`;
+
+    const blob = new Blob([fileContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'discord.token';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+document.getElementById('save-token-btn').addEventListener('click', () => {
+    const token = document.getElementById('token-input').value.trim();
+    if (token) {
+        setToken(token);
+    } else {
+        showToast('Введите токен!', 'error');
+    }
+});
+
+document.getElementById('upload-token-btn').addEventListener('click', () => {
+    const fileInput = document.getElementById('token-file');
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        if (file.name.endsWith('.token')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const tokenMatch = content.match(/"authorization":\s*"([^"]+)"/i);
+                if (tokenMatch && tokenMatch[1]) {
+                    setToken(tokenMatch[1]);
+                } else {
+                    showToast('Токен не найден в файле', 'error');
+                }
+            };
+            reader.readAsText(file);
+        } else {
+            showToast('Неверный формат файла', 'error');
+        }
+    } else {
+        showToast('Выберите файл!', 'error');
+    }
+});
+
+
+        // Show toast notification
+        function showToast(message, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = isSuccess ? 'toast show' : 'toast show error';
+
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+        // Функция загрузки настроек автоответчика
+    function loadAutoResponderSettings() {
+        fetch('/api/auto_responder_settings')
+        .then(response => response.json())
+        .then(settings => {
+            if (settings) {
+                    document.getElementById('auto-responder-enabled').checked = settings.enabled;
+                    document.getElementById('auto-responder-type').value = settings.mode;
+
+                    // Простые настройки
+                    document.getElementById('simple-message').value = settings.simple.message;
+                    document.getElementById('simple-delay').value = settings.simple.delay;
+
+                    // AI настройки
+                document.getElementById('ai-api-key').value = settings.ai.api_key;
+                document.getElementById('ai-system-prompt').value = settings.ai.system_prompt;
+
+                // Устанавливаем модель
+                const modelSelect = document.getElementById('ai-model');
+                for (let i = 0; i < modelSelect.options.length; i++) {
+                    if (modelSelect.options[i].value === settings.ai.model) {
+                        modelSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+
+                    // Показать/скрыть блоки в зависимости от типа
+                    toggleAutoResponderType(settings.mode);
+                }
+            });
+    }
+
+    // Переключение между типами автоответчика
+    function toggleAutoResponderType(type) {
+        if (type === 'simple') {
+            document.getElementById('simple-auto-responder-settings').style.display = 'block';
+            document.getElementById('ai-auto-responder-settings').style.display = 'none';
+        } else {
+            document.getElementById('simple-auto-responder-settings').style.display = 'none';
+            document.getElementById('ai-auto-responder-settings').style.display = 'block';
+        }
+    }
+
+    // Сохранение настроек автоответчика
+    function saveAutoResponderSettings() {
+        const settings = {
+            enabled: document.getElementById('auto-responder-enabled').checked,
+            mode: document.getElementById('auto-responder-type').value,
+            simple_message: document.getElementById('simple-message').value,
+            simple_delay: parseInt(document.getElementById('simple-delay').value) || 0,
+            ai_api_key: document.getElementById('ai-api-key').value,
+            ai_system_prompt: document.getElementById('ai-system-prompt').value,
+            ai_model: document.getElementById('ai-model').value
+        };
+
+        fetch('/save_auto_responder_settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+        })
+        .then(response => response.json())
+        .then(data => {
+            showToast(data.success ? 'Настройки автоответчика сохранены!' : 'Ошибка сохранения', data.success);
+        });
+    }
+
+    // Инициализация при загрузке страницы настроек
+    document.getElementById('auto-responder-type').addEventListener('change', function() {
+        toggleAutoResponderType(this.value);
+    });
+
+    document.getElementById('save-auto-responder-btn').addEventListener('click', saveAutoResponderSettings);
+
+        // Показать секцию
+        function showSection(sectionId) {
+            // Скрыть все секции
+            document.querySelectorAll('.section-container').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Удалить активный класс у всех пунктов меню
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Добавить активный класс к текущему пункту
+            event.currentTarget.classList.add('active');
+
+            // Показать текущую секцию
+            const section = document.getElementById(`${sectionId}-section`);
+            if (section) {
+                section.style.display = 'block';
+            }
+
+            // Загрузить данные для секции при необходимости
+            switch(sectionId) {
+                case 'friends':
+                    loadFriends();
+                    break;
+                case 'friend-requests':
+                    loadFriendRequests();
+                    loadAutoSettings();
+                    break;
+                case 'messenger':
+                    loadMessenger();
+                    break;
+                case 'guilds':
+                    loadGuilds();
+                    break;
+                case 'settings':
+                    loadAutoResponderSettings();
+                    updateTokenStatus();
+                    break;
+            }
+        }
+
+
+        // Загрузка друзей и заблокированных
+        function loadFriends() {
+            const friendsList = document.getElementById('friends-list');
+            const blockedList = document.getElementById('blocked-list');
+
+            friendsList.innerHTML = '<div class="loader">Загрузка друзей...</div>';
+            blockedList.innerHTML = '<div class="loader">Загрузка заблокированных...</div>';
+
+            fetch('/api/friends')
+                .then(response => response.json())
+                .then(data => {
+                    // Очищаем списки
+                    friendsList.innerHTML = '';
+                    blockedList.innerHTML = '';
+
+                    // Отображаем друзей
+                    if (data.friends.length === 0) {
+                        friendsList.innerHTML = '<div class="text-center py-3">У вас пока нет друзей</div>';
+                    } else {
+                        data.friends.forEach(friend => {
+                            const friendElement = createFriendElement(friend, 'friend');
+                            friendsList.appendChild(friendElement);
+                        });
+                    }
+
+                    // Отображаем заблокированных
+                    if (data.blocked.length === 0) {
+                        blockedList.innerHTML = '<div class="text-center py-3"></div>';
+                    } else {
+                        data.blocked.forEach(user => {
+                            const blockedElement = createFriendElement(user, 'blocked');
+                            blockedList.appendChild(blockedElement);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading friends:', error);
+                    friendsList.innerHTML = '<div class="alert alert-danger">Ошибка загрузки списка друзей</div>';
+                    blockedList.innerHTML = '';
+                });
+        }
+        // Создание элемента пользователя
+        function createFriendElement(user, type) {
+            const element = document.createElement('div');
+            element.className = 'friend-item';
+            element.innerHTML = `
+                <div class="friend-info">
+                    <div class="friend-avatar" id="avatar-${user.id}">${user.username[0].toUpperCase()}</div>
+                    <div class="friend-details">
+                        <span class="friend-name">${user.username}#${user.discriminator}</span>
+                        <span class="friend-id">ID: ${user.id}</span>
+                    </div>
+                </div>
+                <div class="friend-actions">
+                    ${type === 'friend'
+                        ? `
+                            <button class="btn btn-danger btn-sm remove-friend-btn" data-user-id="${user.id}">
+                                <i class="fas fa-user-times"></i> Удалить
+                            </button>
+                            <button class="btn btn-warning btn-sm block-user-btn" data-user-id="${user.id}">
+                                <i class="fas fa-ban"></i> Заблокировать
+                            </button>
+                          `
+                        : `
+                            <button class="btn btn-success btn-sm unblock-user-btn" data-user-id="${user.id}">
+                                <i class="fas fa-unlock"></i> Разблокировать
+                            </button>
+                          `
+                    }
+                </div>
+            `;
+
+            // Загрузка аватарки
+            const avatarElement = element.querySelector(`#avatar-${user.id}`);
+            if (avatarElement) {
+                loadAvatar(avatarElement, user.id, user.avatar, user.discriminator);
+            }
+
+            return element;
+        }
+
+        // Load guilds list
+        function loadGuilds() {
+            const container = document.getElementById('guilds-container');
+            container.innerHTML = '<div class="loader">Загрузка серверов...</div>';
+
+            fetch('/api/guilds')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        container.innerHTML = '<p>Вы не состоите ни в одном сервере</p>';
+                        return;
+                    }
+
+                    let html = '';
+                    data.forEach(guild => {
+                        html += `
+                        <div class="guild-card">
+                            <div class="guild-icon">${guild.name[0].toUpperCase()}</div>
+                            <div class="guild-info">
+                                <div class="guild-name">${guild.name}</div>
+                                <div class="guild-id">${guild.id}</div>
+                            </div>
+                            <div class="guild-actions">
+                                <button class="btn btn-danger leave-guild-btn" data-guild-id="${guild.id}"><i class="fas fa-sign-out-alt"></i></button>
+                            </div>
+                        </div>
+                        `;
+                    });
+
+                    container.innerHTML = html;
+
+                    // Add event listeners for leave buttons
+                    document.querySelectorAll('.leave-guild-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const guildId = this.dataset.guildId;
+                            if (confirm(`Вы уверены, что хотите покинуть сервер?`)) {
+                                const formData = new FormData();
+                                formData.append('guild_id', guildId);
+
+                                fetch('/leave_guild', { method: 'POST', body: formData })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            showToast('Сервер успешно покинут!');
+                                            this.closest('.guild-card').remove();
+                                        } else {
+                                            showToast('Ошибка при выходе с сервера', false);
+                                        }
+                                    });
+                            }
+                        });
+                    });
+                });
+        }
+        // Функция для загрузки аватарки
+function loadAvatar(element, userId, avatarHash, discriminator) {
+    if (avatarHash) {
+        element.style.backgroundImage = `url(https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.webp?size=128)`;
+    } else {
+        const defaultAvatarIndex = discriminator % 5;
+        element.style.backgroundImage = `url(https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex}.png)`;
+    }
+    element.textContent = '';
+}
+        // Load messenger
+        function loadMessenger() {
+            // Load friends for new chat
+
+
+            fetch('/api/friends')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('new-chat-select');
+                    select.innerHTML = '';
+
+                    if (data.friends.length > 0) {
+                        data.friends.forEach(friend => {
+                            const option = document.createElement('option');
+                            option.value = friend.id;
+                            option.textContent = `${friend.username}#${friend.discriminator}`;
+                            select.appendChild(option);
+                        });
+                    } else {
+                        select.innerHTML = '<option value="">Нет друзей</option>';
+                    }
+                });
+
+            // Загружаем DM каналы
+    const container = document.getElementById('conversation-items');
+    container.innerHTML = '<div class="loader">Загрузка чатов...</div>';
+
+    fetch('/api/dm_channels')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('conversation-items');
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = '<p></p>';
+                return;
+            }
+
+            data.forEach(channel => {
+                if (channel.type === 1) { // DM channel
+                    const recipient = channel.recipients[0];
+                    const conversationItem = document.createElement('div');
+                    conversationItem.className = 'conversation-item';
+                    conversationItem.dataset.channelId = channel.id;
+                    conversationItem.dataset.recipientId = recipient.id;
+
+                    conversationItem.innerHTML = `
+                        <div class="conversation-avatar" id="avatar-${channel.id}">${recipient.username[0].toUpperCase()}</div>
+                        <div class="conversation-info">
+                            <div class="conversation-name">${recipient.username}#${recipient.discriminator}</div>
+                            <div class="conversation-preview">Нажмите, чтобы открыть</div>
+                        </div>
+                    `;
+
+                    // Добавляем обработчики событий
+                    conversationItem.addEventListener('click', () => {
+                        loadConversation(
+                            channel.id,
+                            `${recipient.username}#${recipient.discriminator}`,
+                            recipient.id,
+                            recipient.avatar,
+                            recipient.discriminator
+                        );
+                    });
+
+                    // Обработчики для анимации наведения
+                    conversationItem.addEventListener('mouseenter', () => {
+                        conversationItem.style.backgroundColor = '#f5f5f5';
+                        conversationItem.style.transform = 'translateY(-2px)';
+                        conversationItem.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                    });
+
+                    conversationItem.addEventListener('mouseleave', () => {
+                        conversationItem.style.backgroundColor = '';
+                        conversationItem.style.transform = '';
+                        conversationItem.style.boxShadow = '';
+                    });
+
+                    container.appendChild(conversationItem);
+
+                    // Загрузка аватарки
+                    const avatarElement = conversationItem.querySelector(`#avatar-${channel.id}`);
+                    if (avatarElement) {
+                        loadAvatar(avatarElement, recipient.id, recipient.avatar, recipient.discriminator);
+                    }
+                }
+            });
+        });
+}
+
+        // Start new chat
+        function startNewChat() {
+            document.getElementById('new-chat-section').style.display = 'block';
+        }
+
+        // Create new chat
+        function createNewChat() {
+            const userId = document.getElementById('new-chat-select').value;
+            if (!userId) {
+                showToast('Выберите друга!', false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('user_id', userId);
+
+            fetch('/create_dm', { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Чат создан!');
+                        loadMessenger();
+                        document.getElementById('new-chat-section').style.display = 'none';
+                    } else {
+                        showToast('Не удалось создать чат', false);
+                    }
+                });
+        }
+
+        // Load conversation
+        function loadConversation(channelId, title, userId, avatarHash, discriminator) {
+    // Останавливаем предыдущее автообновление
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+
+    activeConversation = channelId;
+    currentRecipient = { id: userId, avatar: avatarHash, discriminator };
+    lastMessageTimestamp = 0; // Сбрасываем временную метку
+
+    // Устанавливаем аватар в заголовке
+    const avatarElement = document.getElementById('conversation-avatar');
+    avatarElement.textContent = title[0].toUpperCase();
+    loadAvatar(avatarElement, userId, avatarHash, discriminator);
+
+    // Hide no conversation message, show conversation
+    document.getElementById('no-conversation').style.display = 'none';
+    document.getElementById('active-conversation').style.display = 'flex';
+    document.getElementById('conversation-title').textContent = title;
+
+    // Clear message history
+    const historyEl = document.getElementById('message-history');
+    historyEl.innerHTML = '<div class="loader">Загрузка сообщений...</div>';
+
+    // Load conversation history
+    fetch(`/api/conversation/${channelId}`)
+        .then(response => response.json())
+        .then(data => {
+            historyEl.innerHTML = '';
+
+            data.messages.forEach(msg => {
+                addMessageToHistory(msg);
+                // Сохраняем последнюю временную метку
+                const msgTime = new Date(msg.timestamp).getTime();
+                if (msgTime > lastMessageTimestamp) {
+                    lastMessageTimestamp = msgTime;
+                }
+            });
+
+            // Scroll to bottom
+            historyEl.scrollTop = historyEl.scrollHeight;
+
+            // Запускаем автообновление
+            refreshInterval = setInterval(() => checkNewMessages(channelId), 3000);
+        });
+
+    // Set up message sending
+    document.getElementById('send-message-btn').onclick = () => {
+        const message = document.getElementById('message-input').value.trim();
+        if (message) {
+            const formData = new FormData();
+            formData.append('channel_id', channelId);
+            formData.append('message', message);
+
+            fetch('/send_message', { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Добавляем сообщение сразу в историю
+                        const newMsg = {
+                            content: message,
+                            is_self: true,
+                            author: "Вы",
+                            timestamp: new Date().toISOString()
+                        };
+                        addMessageToHistory(newMsg);
+                        document.getElementById('message-input').value = '';
+
+                        // Обновляем временную метку
+                        lastMessageTimestamp = new Date().getTime();
+
+                        // Scroll to bottom
+                        const historyEl = document.getElementById('message-history');
+                        historyEl.scrollTop = historyEl.scrollHeight;
+                    }
+                });
+        }
+    };
+}
+// Функция проверки новых сообщений
+function checkNewMessages(channelId) {
+    if (!channelId || channelId !== activeConversation) return;
+
+    fetch(`/api/conversation/${channelId}/updates?since=${lastMessageTimestamp}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.messages && data.messages.length > 0) {
+                const historyEl = document.getElementById('message-history');
+
+                data.messages.forEach(msg => {
+                    // Проверяем чтобы не дублировать текущие сообщения
+                    const msgTime = new Date(msg.timestamp).getTime();
+                    if (msgTime > lastMessageTimestamp) {
+                        addMessageToHistory(msg);
+                        lastMessageTimestamp = msgTime;
+                    }
+                });
+
+                // Scroll to bottom
+                historyEl.scrollTop = historyEl.scrollHeight;
+            }
+        });
+}
+
+
+       // Вспомогательная функция для добавления сообщений в историю
+function addMessageToHistory(msg) {
+    const historyEl = document.getElementById('message-history');
+    const messageEl = document.createElement('div');
+    messageEl.className = `message ${msg.is_self ? 'self' : ''}`;
+    messageEl.innerHTML = `
+        <div class="message-author">${msg.author}</div>
+        <div class="message-content">${msg.content}</div>
+        <div class="message-time">${new Date(msg.timestamp).toLocaleTimeString()}</div>
+    `;
+    historyEl.appendChild(messageEl);
+}
+        // Set status
+        function setStatus(status) {
+            const formData = new FormData();
+            formData.append('status', status);
+
+            fetch('/set_status', { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Статус успешно обновлен!');
+                    } else {
+                        showToast('Ошибка обновления статуса', false);
+                    }
+                });
+        }
+
+        // Event listeners
+        document.getElementById('start-btn').addEventListener('click', () => {
+            fetch('/start', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    showToast(data.message, data.success);
+                    if (data.success) {
+                        setTimeout(updateBotStatus, 1000);
+                    }
+                });
+        });
+
+        document.getElementById('stop-btn').addEventListener('click', () => {
+            fetch('/stop', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    showToast(data.message, data.success);
+                    if (data.success) {
+                        setTimeout(updateBotStatus, 1000);
+                    }
+                });
+        });
+
+        document.getElementById('send-btn').addEventListener('click', () => {
+            const userId = document.getElementById('send-user-id').value;
+            const message = document.getElementById('send-message').value;
+
+            if (!userId || !message) {
+                showToast('Заполните все поля!', false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('user_id', userId);
+            formData.append('message', message);
+
+            fetch('/send_message', { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    showToast(data.success ? 'Сообщение отправлено!' : 'Ошибка отправки', data.success);
+                    if (data.success) {
+                        document.getElementById('send-user-id').value = '';
+                        document.getElementById('send-message').value = '';
+                    }
+                });
+        });
+
+        // Delegate event for friend removal
+        document.getElementById('friends-container').addEventListener('click', (event) => {
+            if (event.target.classList.contains('remove-friend')) {
+                const userId = event.target.closest('.remove-friend').dataset.userId;
+                if (confirm('Вы уверены, что хотите удалить этого друга?')) {
+                    const formData = new FormData();
+                    formData.append('user_id', userId);
+
+                    fetch('/remove_friend', { method: 'POST', body: formData })
+                        .then(response => response.json())
+                        .then(data => {
+                            showToast(data.success ? 'Друг удалён!' : 'Ошибка удаления', data.success);
+                            if (data.success) {
+                                loadFriends();
+                            }
+                        });
+                }
+            }
+        });
+
+        // Broadcast to all friends
+        document.getElementById('broadcast-btn').addEventListener('click', () => {
+            const message = document.getElementById('broadcast-message').value;
+            if (!message) {
+                showToast('Введите сообщение!', false);
+                return;
+            }
+
+            if (!confirm('Вы уверены, что хотите отправить это сообщение всем друзьям?')) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('message', message);
+
+            fetch('/send_to_all', { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const successCount = data.results.filter(r => r.success).length;
+                        showToast(`Сообщение отправлено ${successCount} друзьям!`);
+                    } else {
+                        showToast('Ошибка массовой отправки', false);
+                    }
+                });
+        });
+
+        // Add friend
+        document.getElementById('add-friend-btn').addEventListener('click', () => {
+            const username = document.getElementById('friend-username').value;
+            const discriminator = document.getElementById('friend-discriminator').value.replace('#', '');
+
+            if (!username || !discriminator) {
+                showToast('Заполните все поля!', false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('discriminator', discriminator);
+
+            fetch('/add_friend', { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Запрос в друзья отправлен!');
+                        document.getElementById('friend-username').value = '';
+                        document.getElementById('friend-discriminator').value = '';
+                        loadFriends();
+                    } else {
+                        showToast('Ошибка отправки запроса', false);
+                    }
+                });
+        });
+
+        // Initial update
+        updateBotStatus();
+        setInterval(updateBotStatus, 5000);
+
+
+        function updateTokenStatus() {
+    fetch('/api/current_token')
+        .then(res => res.json())
+        .then(data => {
+            const statusEl = document.getElementById('token-status');
+            if (data.token) {
+                statusEl.innerHTML = `<i class="fas fa-circle" style="color: #43b581;"></i> Задан (${data.token.slice(0, 10)}...)`;
+            } else {
+                statusEl.innerHTML = '<i class="fas fa-circle" style="color: #f04747;"></i> Не задан';
+            }
+        });
+}
+
+// Обновлять статус при загрузке и после операций с токеном
+document.addEventListener('DOMContentLoaded', updateTokenStatus);
+    </script>
+<script>
+    // Функция для обновления статуса
+    function updateStatus() {
+        fetch('/api/status')
+            .then(response => response.json())
+            .then(data => {
+                // Обновляем статус бота
+                const statusElement = document.getElementById('bot-status');
+                const statusClass = data.status === 'Online' ? 'status-online' : 'status-offline';
+
+                statusElement.innerHTML = `
+                    <span class="status-indicator ${statusClass}"></span>
+                    ${data.status}
+                `;
+
+                // Обновляем остальные показатели
+                document.getElementById('message-count').textContent = data.message_count;
+                document.getElementById('friend-count').textContent = data.friend_count;
+                document.getElementById('uptime').textContent = data.uptime;
+            });
+    }
+
+    // Инициализация после загрузки страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        // Обновляем статус
+        updateStatus();
+        updateTokenStatus();
+
+
+        // Обновляем статус каждые 3 секунды
+        setInterval(updateStatus, 3000);
+
+        // Обработчики для кнопок запуска/остановки
+        document.getElementById('start-btn').addEventListener('click', () => {
+            fetch('/start', { method: 'POST' })
+                .then(() => setTimeout(updateStatus, 1000));
+        });
+
+        document.getElementById('stop-btn').addEventListener('click', () => {
+            fetch('/stop', { method: 'POST' })
+                .then(() => setTimeout(updateStatus, 1000));
+        });
+
+        // Обработчики для друзей (делегирование событий)
+        document.getElementById('friends-list').addEventListener('click', (e) => {
+            const removeBtn = e.target.closest('.remove-friend-btn');
+            const blockBtn = e.target.closest('.block-user-btn');
+
+            if (removeBtn) {
+                removeFriend(removeBtn.dataset.userId);
+            } else if (blockBtn) {
+                blockUser(blockBtn.dataset.userId);
+            }
+        });
+
+        document.getElementById('blocked-list').addEventListener('click', (e) => {
+            const unblockBtn = e.target.closest('.unblock-user-btn');
+            if (unblockBtn) {
+                unblockUser(unblockBtn.dataset.userId);
+            }
+        });
+
+        // Обработчики для заявок
+        const refreshBtn = document.getElementById('refresh-requests-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', loadFriendRequests);
+        }
+
+        const autoAcceptSwitch = document.getElementById('autoAcceptSwitch');
+        const autoRejectSwitch = document.getElementById('autoRejectSwitch');
+
+        if (autoAcceptSwitch && autoRejectSwitch) {
+            autoAcceptSwitch.addEventListener('change', function() {
+                if (this.checked) {
+                    autoRejectSwitch.checked = false;
+                }
+                updateAutoSettings();
+            });
+
+            autoRejectSwitch.addEventListener('change', function() {
+                if (this.checked) {
+                    autoAcceptSwitch.checked = false;
+                }
+                updateAutoSettings();
+            });
+
+            // Загружаем текущие настройки
+            loadAutoSettings();
+        }
+
+        // Обработчики для токена
+        document.getElementById('save-token-btn').addEventListener('click', saveToken);
+        document.getElementById('upload-token-btn').addEventListener('click', uploadToken);
+
+        // Обработчики для автоответчика
+        document.getElementById('auto-responder-type').addEventListener('change', function() {
+            toggleAutoResponderType(this.value);
+        });
+
+        document.getElementById('save-auto-responder-btn').addEventListener('click', saveAutoResponderSettings);
+
+        // Обработчики для других кнопок
+        document.getElementById('broadcast-btn').addEventListener('click', broadcastToFriends);
+        document.getElementById('add-friend-btn').addEventListener('click', addFriend);
+        document.getElementById('send-btn').addEventListener('click', sendDirectMessage);
+
+        // Активируем главную вкладку
+        document.querySelector('.nav-item.active').click();
+    });
+
+    // Функция отправки сообщения всем друзьям
+    function broadcastToFriends() {
+        const message = document.getElementById('broadcast-message').value;
+        if (!message) {
+            showToast('Введите сообщение!', false);
+            return;
+        }
+
+        if (!confirm('Вы уверены, что хотите отправить это сообщение всем друзьям?')) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('message', message);
+
+        fetch('/send_to_all', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const successCount = data.results.filter(r => r.success).length;
+                showToast(`Сообщение отправлено ${successCount} друзьям!`, true);
+            } else {
+                showToast('Ошибка массовой отправки', false);
+            }
+        });
+    }
+// Функция добавления друга
+    function addFriend() {
+        const username = document.getElementById('friend-username').value;
+        const discriminator = document.getElementById('friend-discriminator').value.replace('#', '');
+
+        if (!username || !discriminator) {
+            showToast('Заполните все поля!', false);
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('discriminator', discriminator);
+
+        fetch('/add_friend', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Запрос в друзья отправлен!', true);
+                document.getElementById('friend-username').value = '';
+                document.getElementById('friend-discriminator').value = '';
+                loadFriends();
+            } else {
+                showToast('Ошибка отправки запроса', false);
+            }
+        });
+    }
+
+
+    // Загрузка заявок в друзья
+        function loadFriendRequests() {
+            const container = document.getElementById('friend-requests-container');
+            container.innerHTML = `
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden"></span>
+                    </div>
+                    <p></p>
+                </div>
+            `;
+
+            fetch('/api/friend_requests')
+                .then(response => response.json())
+                .then(requests => {
+                    container.innerHTML = '';
+
+                    if (requests.length === 0) {
+                        container.innerHTML = `
+                            <div class="alert alert-info text-center">
+
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    requests.forEach(request => {
+                        const user = request.user;
+                        const requestCard = document.createElement('div');
+                        requestCard.className = 'friend-request-card';
+                        requestCard.innerHTML = `
+                            <div class="d-flex align-items-center">
+                                <div class="friend-avatar" id="request-avatar-${user.id}" style="width: 60px; height: 60px;">${user.username[0].toUpperCase()}</div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">${user.username}#${user.discriminator}</h6>
+
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-success accept-request-btn" data-user-id="${user.id}">
+                                        <i class="fas fa-check"></i> Принять
+                                    </button>
+                                    <button class="btn btn-danger reject-request-btn" data-user-id="${user.id}">
+                                        <i class="fas fa-times"></i> Отклонить
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(requestCard);
+
+                        // Загрузка аватарки
+                        const avatarElement = requestCard.querySelector(`#request-avatar-${user.id}`);
+                        if (avatarElement) {
+                            loadAvatar(avatarElement, user.id, user.avatar, user.discriminator);
+                        }
+                    });
+
+                    // Добавляем обработчики для кнопок
+                    document.querySelectorAll('.accept-request-btn').forEach(btn => {
+                        btn.addEventListener('click', () => acceptFriendRequest(btn.dataset.userId));
+                    });
+
+                    document.querySelectorAll('.reject-request-btn').forEach(btn => {
+                        btn.addEventListener('click', () => rejectFriendRequest(btn.dataset.userId));
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading friend requests:', error);
+                    container.innerHTML = `
+                        <div class="alert alert-danger">
+                            Ошибка загрузки заявок: ${error.message}
+                        </div>
+                    `;
+                });
+        }
+
+// Функция принятия заявки
+        function acceptFriendRequest(userId) {
+            const formData = new FormData();
+            formData.append('user_id', userId);
+
+            fetch('/api/accept_friend_request', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Заявка успешно принята!', true);
+                    loadFriendRequests(); // Обновляем список
+                    loadFriends(); // Обновляем список друзей
+                } else {
+                    showToast('Ошибка при принятии заявки', false);
+                }
+            })
+            .catch(error => {
+                console.error('Error accepting friend request:', error);
+                showToast('Ошибка при принятии заявки: ' + error.message, false);
+            });
+        }
+
+// Функция отклонения заявки
+        function rejectFriendRequest(userId) {
+            const formData = new FormData();
+            formData.append('user_id', userId);
+
+            fetch('/api/reject_friend_request', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Заявка отклонена', true);
+                    loadFriendRequests(); // Обновляем список
+                } else {
+                    showToast('Ошибка при отклонении заявки', false);
+                }
+            })
+            .catch(error => {
+                console.error('Error rejecting friend request:', error);
+                showToast('Ошибка при отклонении заявки: ' + error.message, false);
+            });
+        }
+// Функция обновления настроек авто-обработки
+        function updateAutoSettings() {
+            const autoAccept = document.getElementById('autoAcceptSwitch').checked;
+            const autoReject = document.getElementById('autoRejectSwitch').checked;
+
+            // Гарантируем, что только одна опция может быть включена
+            if (autoAccept && autoReject) {
+                document.getElementById('autoRejectSwitch').checked = false;
+                autoReject = false;
+            }
+
+            const formData = new FormData();
+            formData.append('auto_accept', autoAccept);
+            formData.append('auto_reject', autoReject);
+
+            fetch('/api/set_friend_request_auto_settings', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const message = autoAccept ?
+                        'Авто-принятие включено' :
+                        autoReject ? 'Авто-отклонение включено' : 'Авто-обработка отключена';
+                    showToast(message, true);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating auto settings:', error);
+                showToast('Ошибка обновления настроек: ' + error.message, false);
+            });
+        }
+
+// Функция загрузки текущих настроек
+        function loadAutoSettings() {
+            fetch('/api/friend_request_settings')
+                .then(response => response.json())
+                .then(settings => {
+                    document.getElementById('autoAcceptSwitch').checked = settings.auto_accept;
+                    document.getElementById('autoRejectSwitch').checked = settings.auto_reject;
+                })
+                .catch(error => {
+                    console.error('Error loading auto settings:', error);
+                    showToast('Ошибка загрузки настроек: ' + error.message, false);
+                });
+        }
+
+        // Удалить друга
+        function removeFriend(userId) {
+            if (!confirm('Вы уверены, что хотите удалить этого пользователя из друзей?')) return;
+
+            const formData = new FormData();
+            formData.append('user_id', userId);
+
+            fetch('/remove_friend', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Пользователь удален из друзей', true);
+                    loadFriends();
+                } else {
+                    showToast('Не удалось удалить пользователя', false);
+                }
+            });
+        }
+
+        // Заблокировать пользователя
+        function blockUser(userId) {
+            if (!confirm('Вы уверены, что хотите заблокировать этого пользователя?')) return;
+
+            const formData = new FormData();
+            formData.append('user_id', userId);
+
+            fetch('/block_user', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Пользователь заблокирован', true);
+                    loadFriends();
+                } else {
+                    showToast('Не удалось заблокировать пользователя', false);
+                }
+            });
+        }
+
+        // Разблокировать пользователя
+        function unblockUser(userId) {
+            const formData = new FormData();
+            formData.append('user_id', userId);
+
+            fetch('/unblock_user', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Пользователь разблокирован', true);
+                    loadFriends();
+                } else {
+                    showToast('Не удалось разблокировать пользователя', false);
+                }
+            });
+        }
+
+
+// Загрузка настроек при открытии вкладки
+document.getElementById('friend-requests-tab').addEventListener('click', () => {
+    loadFriendRequests();
+
+    // Загрузить текущие настройки
+    if (botActive) {
+        fetch('/api/friend_request_settings')
+            .then(response => response.json())
+            .then(settings => {
+                document.getElementById('autoAcceptCheckbox').checked = settings.auto_accept;
+                document.getElementById('autoRejectCheckbox').checked = settings.auto_reject;
+            });
+    }
+});
+</script>
+</body>
+</html>
