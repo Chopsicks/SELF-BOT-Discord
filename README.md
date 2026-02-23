@@ -35,7 +35,7 @@ S-B0T — это мощный self‑бот для Discord, написанный
 Клонируйте репозиторий
 
 bash
-git clone https://github.com/frizzylow/s-b0t.git
+git clone [https://github.com/frizzylow/s-b0t.git](https://github.com/Chopsicks/SELF-BOT-Discord.git)
 cd s-b0t
 Установите зависимости
 
