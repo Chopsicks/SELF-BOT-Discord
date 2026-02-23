@@ -9,7 +9,7 @@
 
 <p align="center">
   <strong>Полнофункциональный Discord Self-Bot с удобным веб-интерфейсом и ИИ‑автоответчиком</strong><br>
-  <i>Разработчик: <a href="https://github.com/frizzylow">frizzylow</a></i>
+  <i>Разработчик: <a href="https://github.com/Chopsicks">frizzylow</a></i>
 </p>
 
 ---
@@ -52,5 +52,5 @@
 
 1. **Клонируйте репозиторий**
    ```bash
-   git clone https://github.com/frizzylow/s-b0t.git
-   cd s-b0t
+   git clone https://github.com/Chopsicks/SELF-BOT-Discord.git
+   cd SELF-BOT-Discord
